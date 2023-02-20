@@ -15,13 +15,56 @@ const CreatePost = () => {
   const [loading, setLoading] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
 
-  const handleSubmit = () => {};
+  const generateImage = async () => {
+    if (form.prompt) {
+      try {
+        setGeneratingImage(true);
+        const response = await fetch("http://localhost:8000/api/dalle/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ prompt: form.prompt }),
+        });
+        const data = await response.json();
+        setForm({ ...form, photo: `data:image/jpeg;base64,${data.photo}` });
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        setGeneratingImage(false);
+      }
+    } else {
+      alert("Please enter a prompt");
+    }
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (form.photo && form.prompt) {
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:8000/api/posts/post", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(form),
+        });
+        await response.json();
+        navigate("/");
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      alert("Please enter a prompt and generate an image");
+    }
+  };
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
   const handleSurpriseMe = () => {
     const randomPrompt = getRandomPrompt(form.prompt);
-    console.log(randomPrompt);
     setForm({ ...form, prompt: randomPrompt });
   };
 
@@ -83,6 +126,7 @@ const CreatePost = () => {
         <div className="mt-5 flex gap-5">
           <button
             type="button"
+            onClick={generateImage}
             className="text-white bg-green-700 font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center"
           >
             {generatingImage ? "Generating... " : "Generate"}
