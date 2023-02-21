@@ -4,7 +4,7 @@ import { Card, FormField, Loader } from "../components";
 const RenderCards = ({ data, title }) => {
   if (data.length > 0) {
     return data.map((item) => {
-      <Card key={item._id} {...item} />;
+      return <Card key={item._id} {...item} />;
     });
   }
   return (
@@ -15,8 +15,49 @@ const RenderCards = ({ data, title }) => {
 const Home = () => {
   const [loading, setLoading] = useState(false);
   const [allPosts, setAllPosts] = useState([]);
-  const [searchText, setSearchText] = useState("");
 
+  const [searchText, setSearchText] = useState("");
+  const [searchTimeout, setSearchTimeout] = useState([]);
+  const [searchedResults, setSearchedResults] = useState([]);
+
+  const handleSearchChange = (e) => {
+    clearTimeout(searchTimeout);
+    setSearchText(e.target.value);
+
+    setSearchTimeout(
+      setTimeout(() => {
+        const searchResult = allPosts.filter(
+          (item) =>
+            item.name.toLowerCase().includes(searchText.toLowerCase()) ||
+            item.prompt.toLowerCase().includes(searchText.toLowerCase())
+        );
+        setSearchedResults(searchResult);
+      }, 500)
+    );
+  };
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:8000/api/posts/all", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setAllPosts(data.data.reverse());
+          console.log(allPosts);
+        }
+      } catch (error) {
+        alert(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
   return (
     <section className="max-w-7xl mx-auto">
       <div>
@@ -30,7 +71,14 @@ const Home = () => {
       </div>
 
       <div className="mt-16">
-        <FormField />
+        <FormField
+          labelName={"Search Posts"}
+          type="text"
+          name="text"
+          placeholder={"Search by name or prompt"}
+          value={searchText}
+          handleChange={handleSearchChange}
+        />
       </div>
 
       <div className="mt-10">
@@ -48,9 +96,12 @@ const Home = () => {
             )}
             <div className="grid grid-lg-cols-4 sm:grid-cols-3 xs:grid-cols-2 grid-cols-1 gap-3">
               {searchText ? (
-                <RenderCards data={[]} title="No search results found" />
+                <RenderCards
+                  data={searchedResults}
+                  title="No search results found"
+                />
               ) : (
-                <RenderCards data={[]} title="no posts found " />
+                <RenderCards data={allPosts} title="no posts found " />
               )}
             </div>
           </>
