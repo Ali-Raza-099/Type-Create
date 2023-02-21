@@ -39,16 +39,18 @@ const Home = () => {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:8000/api/posts/all", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          "https://dizzy-fly-nightshirt.cyclic.app/api/posts/all",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
         if (response.ok) {
           const data = await response.json();
           setAllPosts(data.data.reverse());
-          console.log(allPosts);
         }
       } catch (error) {
         alert(error.message);
