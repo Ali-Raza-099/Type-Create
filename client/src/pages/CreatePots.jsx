@@ -56,7 +56,7 @@ const CreatePost = () => {
           }
         );
         await response.json();
-        navigate("/");
+        navigate("/Type-Create");
       } catch (error) {
         alert(error.message);
       } finally {
